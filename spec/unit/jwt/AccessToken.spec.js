@@ -199,6 +199,23 @@ describe('AccessToken', function() {
       });
     });
 
+    it('should create token with player grant', function() {
+      var token = new twilio.jwt.AccessToken(accountSid, keySid, 'secret');
+      token.identity = 'ID@example.com';
+
+      var grant = new twilio.jwt.AccessToken.PlayerGrant();
+      grant.playbackGrant = '{ \"playbackUrl\" : \"https://video.net?token=eyJ3423432434234234\", ' +
+          '\"playerStreamerSid\" : \"VJ123\" }';
+      token.addGrant(grant);
+
+      var decoded = jwt.verify(token.toJwt(), 'secret');
+      expect(decoded.grants).toEqual({
+        identity: 'ID@example.com',
+        player: '{ \"playbackUrl\" : \"https://video.net?token=eyJ3423432434234234\", ' +
+            '\"playerStreamerSid\" : \"VJ123\" }'
+      });
+    });
+
     it('should create token with conversations grant', function() {
       var token = new twilio.jwt.AccessToken(accountSid, keySid, 'secret');
       token.identity = 'ID@example.com';
@@ -276,6 +293,11 @@ describe('AccessToken', function() {
       grant.room = 'CPaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
       token.addGrant(grant);
 
+      grant = new twilio.jwt.AccessToken.PlayerGrant();
+      grant.playbackGrant = '{ \"playbackUrl\" : \"https://video.net?token=eyJ3423432434234234\", ' +
+          '\"playerStreamerSid\" : \"VJ123\" }';
+      token.addGrant(grant);
+
       grant = new twilio.jwt.AccessToken.TaskRouterGrant();
       grant.workspaceSid = 'WSxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
       grant.workerSid = 'WKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
@@ -298,6 +320,8 @@ describe('AccessToken', function() {
         video: {
           room: 'CPaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
         },
+        player: '{ \"playbackUrl\" : \"https://video.net?token=eyJ3423432434234234\", ' +
+            '\"playerStreamerSid\" : \"VJ123\" }',
         task_router: {
           workspace_sid: 'WSxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
           worker_sid: 'WKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
@@ -463,6 +487,18 @@ describe('AccessToken', function() {
         expect(grant.toPayload()).toEqual({
           room: 'CPsid'
         });
+      });
+    });
+
+    describe('PlayerGrant', function() {
+      it('should only populate set properties', function() {
+        var grant = new twilio.jwt.AccessToken.PlayerGrant();
+        expect(grant.toPayload()).toEqual('');
+
+        grant.playbackGrant = '{ \"playbackUrl\" : \"https://video.net?token=eyJ3423432434234234\", ' +
+            '\"playerStreamerSid\" : \"VJ123\" }';
+        expect(grant.toPayload()).toEqual('{ \"playbackUrl\" : \"https://video.net?token=eyJ3423432434234234\", ' +
+            '\"playerStreamerSid\" : \"VJ123\" }');
       });
     });
 
